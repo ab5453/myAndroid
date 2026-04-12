@@ -1,0 +1,45 @@
+name: Android APK Build (Buildozer)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Buildozer
+        uses: actions/cache@v4
+        with:
+          path: |
+            .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
+
+      - name: Build APK in Docker (kivy/buildozer)
+        run: |
+          docker pull kivy/buildozer:latest
+          docker run --rm \
+            -v "${{ github.workspace }}:/home/user/hostcwd" \
+            kivy/buildozer:latest \
+            buildozer android debug
+
+      - name: List build outputs
+        run: |
+          ls -lah bin || true
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: udiprintermlkit-apk
+          path: |
+            bin/*.apk
+            bin/*.aab
+          if-no-files-found: error

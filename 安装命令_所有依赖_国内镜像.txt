@@ -1,0 +1,5 @@
+Windows 直接执行（推荐双击 bat）：
+一键安装全部依赖_国内镜像.bat
+
+或命令行一条（Windows + WSL 一起装）：
+python -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple && python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple kivy pyjnius && wsl bash -lc "set -e; sudo apt-get update; sudo apt-get install -y python3-pip python3-setuptools python3-wheel git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev; python3 -m pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple; python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple cython buildozer"

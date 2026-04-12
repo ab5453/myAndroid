@@ -1,0 +1,11 @@
+# 在 WSL/Ubuntu 中打包 Debug APK（推荐）
+
+wsl bash -lc "cd '/mnt/c/Users/13871/Desktop/蓝牙打印APP' && buildozer -v android debug"
+
+# 打包完成后，APK 通常在：
+# C:\Users\13871\Desktop\蓝牙打印APP\bin\
+
+
+# 如需打包 Release APK：
+
+wsl bash -lc "cd '/mnt/c/Users/13871/Desktop/蓝牙打印APP' && buildozer -v android release"
