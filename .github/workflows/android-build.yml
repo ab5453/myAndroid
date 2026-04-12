@@ -1,45 +1,75 @@
-name: Android APK Build (Buildozer)
+name: Build Android APK (Buildozer)
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "**.py"
+      - "buildozer.spec"
+      - ".github/workflows/android-build.yml"
 
 jobs:
-  build-apk:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache Buildozer
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache buildozer and gradle
         uses: actions/cache@v4
         with:
           path: |
-            .buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+            ~/.buildozer
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            buildozer-${{ runner.os }}-
+            ${{ runner.os }}-buildozer-
 
-      - name: Build APK in Docker (kivy/buildozer)
+      - name: Install Linux dependencies
         run: |
-          docker pull kivy/buildozer:latest
-          docker run --rm \
-            -v "${{ github.workspace }}:/home/user/hostcwd" \
-            kivy/buildozer:latest \
-            buildozer android debug
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
+            cmake libffi-dev libssl-dev
 
-      - name: List build outputs
+      - name: Install Buildozer
         run: |
-          ls -lah bin || true
+          python -m pip install --upgrade pip
+          python -m pip install "Cython<3" buildozer
 
-      - name: Upload APK Artifact
+      - name: Build debug APK
+        run: |
+          buildozer -v android debug
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: udiprintermlkit-apk
-          path: |
-            bin/*.apk
-            bin/*.aab
+          name: udi-printer-apk
+          path: bin/*.apk
           if-no-files-found: error
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            .buildozer
+            bin
+          if-no-files-found: ignore
